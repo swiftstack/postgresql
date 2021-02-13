@@ -14,9 +14,10 @@ let package = Package(
             swiftSettings: [
                 .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
             ]),
-        .testTarget(
-            name: "PostgreSQLTests",
+        .executableTarget(
+            name: "Tests/PostgreSQL",
             dependencies: ["Test", "PostgreSQL"],
+            path: "Tests/PostgreSQL",
             swiftSettings: [
                 .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
             ])
