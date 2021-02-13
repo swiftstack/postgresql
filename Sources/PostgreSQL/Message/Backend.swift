@@ -36,35 +36,35 @@ enum BackendMessage {
     case commandComplete(CommandComplete)
     case error(Error)
 
-    init(from stream: StreamReader) throws {
-        let rawType = try stream.read(UInt8.self)
+    static func decode(from stream: StreamReader) async throws -> Self {
+        let rawType = try await stream.read(UInt8.self)
         guard let messageType = RawType(rawValue: rawType) else {
             fatalError("unknown message type: \(rawType)")
         }
-        self = try stream.withSubStreamReader(
+        return try await stream.withSubStreamReader(
                 sizedBy: Int32.self,
                 includingHeader: true)
         { stream in
             switch messageType {
             case .authentication:
-                return .authentication(try .init(from: stream))
+                return .authentication(try await .decode(from: stream))
             case .parameterStatus:
-                return .parameterStatus(try .init(from: stream))
+                return .parameterStatus(try await .decode(from: stream))
             case .backendKeyData:
-                return .backendKeyData(try .init(from: stream))
+                return .backendKeyData(try await .decode(from: stream))
             case .readyForQuery:
-                return .readyForQuery(try .init(from: stream))
+                return .readyForQuery(try await .decode(from: stream))
             case .rowDescription:
-                return .rowDescription(try .init(from: stream))
+                return .rowDescription(try await .decode(from: stream))
             case .dataRow:
-                return .dataRow(try .init(from: stream))
+                return .dataRow(try await .decode(from: stream))
             case .commandComplete:
-                return .commandComplete(try .init(from: stream))
+                return .commandComplete(try await .decode(from: stream))
             case .errorResponse:
-                return .error(try .init(from: stream))
+                return .error(try await .decode(from: stream))
             default:
                 print("type: \(rawType) size: \(stream.limit)")
-                print(try stream.readUntilEnd())
+                print(try await stream.readUntilEnd())
                 fatalError()
             }
         }

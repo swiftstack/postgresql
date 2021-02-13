@@ -5,9 +5,10 @@ extension BackendMessage {
         let name: String
         let value: String
 
-        init(from stream: SubStreamReader) throws {
-            self.name = try stream.readCString()
-            self.value = try stream.readCString()
+        static func decode(from stream: SubStreamReader) async throws -> Self {
+            let name = try await stream.readCString()
+            let value = try await stream.readCString()
+            return .init(name: name, value: value)
         }
     }
 }

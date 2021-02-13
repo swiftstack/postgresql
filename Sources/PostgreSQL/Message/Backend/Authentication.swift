@@ -20,16 +20,16 @@ extension BackendMessage {
             case saslFinal         = 12
         }
 
-        init(from stream: SubStreamReader) throws {
+        static func decode(from stream: SubStreamReader) async throws -> Self {
             guard stream.limit == 4 else {
                 fatalError("Authentication: invalid size")
             }
-            let rawType = try stream.read(UInt32.self)
+            let rawType = try await stream.read(UInt32.self)
             guard let status = RawType(rawValue: rawType) else {
                 fatalError("Authentication: unknown status \(rawType)")
             }
             switch status {
-            case .ok: self = .ok
+            case .ok: return.ok
             // case .clearTextPassword: self = .clearTextPassword
             // case .md5Password: self = .md5Password
             default: fatalError("Authentication: unsupported method: \(status)")

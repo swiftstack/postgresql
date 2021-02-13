@@ -7,17 +7,17 @@ struct RowDescription {
         return columns.map{ $0.name }
     }
 
-    init(from stream: SubStreamReader) throws {
+    static func decode(from stream: SubStreamReader) async throws -> Self {
         var columns = [ColumnDescription]()
-        var numberOfFields = Int(try stream.read(UInt16.self))
+        var numberOfFields = Int(try await stream.read(UInt16.self))
         while !stream.isEmpty {
-            columns.append(try .init(from: stream))
+            columns.append(try await .decode(from: stream))
             numberOfFields -= 1
         }
         guard numberOfFields == 0 else {
             fatalError("RowDescription: invalid format")
         }
-        self.columns = columns
+        return .init(columns: columns)
     }
 }
 
@@ -43,16 +43,21 @@ struct ColumnDescription {
         case binary = 1
     }
 
-    init(from stream: SubStreamReader) throws {
-        self.name = try stream.readCString()
-        self.origin = .init(
-            tableId: Int(try stream.read(Int32.self)),
-            columnNumber: Int(try stream.read(Int16.self)))
-        self.dataType = .init(
-            id: Int(try stream.read(Int32.self)),
-            size: Int(try stream.read(Int16.self)),
-            modifier: Int(try stream.read(Int32.self)))
-        self.format = Format(rawValue: try stream.read(Int16.self))
+    static func decode(from stream: SubStreamReader) async throws -> Self {
+        let name = try await stream.readCString()
+        let origin: Origin = .init(
+            tableId: Int(try await stream.read(Int32.self)),
+            columnNumber: Int(try await stream.read(Int16.self)))
+        let dataType: DataType = .init(
+            id: Int(try await stream.read(Int32.self)),
+            size: Int(try await stream.read(Int16.self)),
+            modifier: Int(try await stream.read(Int32.self)))
+        let format = Format(rawValue: try await stream.read(Int16.self))
+        return .init(
+            name: name,
+            origin: origin,
+            dataType: dataType,
+            format: format)
     }
 }
 

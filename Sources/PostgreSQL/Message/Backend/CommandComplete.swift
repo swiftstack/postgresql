@@ -4,8 +4,8 @@ extension BackendMessage {
     struct CommandComplete {
         let tag: String
 
-        init(from stream: SubStreamReader) throws {
-            self.tag = try stream.readCString()
+        static func decode(from stream: SubStreamReader) async throws -> Self {
+            return .init(tag: try await stream.readCString())
         }
     }
 }

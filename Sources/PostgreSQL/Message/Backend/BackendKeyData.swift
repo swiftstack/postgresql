@@ -5,12 +5,13 @@ extension BackendMessage {
         let processId: Int
         let secretKey: Int
 
-        init(from stream: SubStreamReader) throws {
+        static func decode(from stream: SubStreamReader) async throws -> Self {
             guard stream.limit == 8 else {
                 fatalError("BackendKeyData: invalid size")
             }
-            self.processId = Int(try stream.read(Int32.self))
-            self.secretKey = Int(try stream.read(Int32.self))
+            let processId = Int(try await stream.read(Int32.self))
+            let secretKey = Int(try await stream.read(Int32.self))
+            return .init(processId: processId, secretKey: secretKey)
         }
     }
 }

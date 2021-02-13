@@ -18,8 +18,8 @@ extension FrontendMessage {
             self.string = string
         }
 
-        func encode(to stream: SubStreamWriter) throws {
-            try stream.write(cString: string)
+        func encode(to stream: SubStreamWriter) async throws {
+            try await stream.write(cString: string)
         }
     }
 }

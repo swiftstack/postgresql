@@ -16,49 +16,55 @@ public enum PostgreSQL {
             self.client = Network.Client(host: host, port: port)
         }
 
-        public func connect(user: String, database: String? = nil) throws {
+        public func connect(
+            user: String,
+            database: String? = nil
+        ) async throws {
             if client.isConnected {
                 try? client.disconnect()
             }
-            self.stream = try self.client.connect()
-            try start(user: user, database: database)
+            let networkStream = try await self.client.connect()
+            self.stream = BufferedStream(baseStream: networkStream)
+            try await start(user: user, database: database)
         }
 
         typealias Startup = FrontendMessage.Startup
         typealias Query = FrontendMessage.Query
 
-        public func query(_ string: String) throws -> DataRowIterator {
-            let response = try request(.query(.init(string)))
-            return try DataRowIterator(response)
+        public func query(_ string: String) async throws -> DataRowIterator {
+            let response = try await request(.query(.init(string)))
+            return try await DataRowIterator.asyncInit(response)
         }
 
-        private func start(user: String, database: String?) throws {
-            let response = try request(
+        private func start(user: String, database: String?) async throws {
+            let response = try await request(
                 .startup(.init(user: user, database: database)))
-            guard let status = response.next() else {
+            guard let status = await response.next() else {
                 fatalError("invalid response")
             }
             switch status {
-            case .authentication(.ok): readConfiguration(from: response)
-            case .error(let error): print(error); response.dump()
+            case .authentication(.ok): await readConfiguration(from: response)
+            case .error(let error): print(error); await response.dump()
             default: fatalError("unknown authentication response")
             }
         }
 
-        private func request(_ message: FrontendMessage) throws
+        private func request(_ message: FrontendMessage) async throws
             -> BackendMessageIterator
         {
             guard let stream = stream else {
                 fatalError("undefined is not an object")
             }
-            try message.encode(to: stream)
-            try stream.flush()
+            try await message.encode(to: stream)
+            try await stream.flush()
             return BackendMessageIterator(stream)
         }
 
-        private func readConfiguration(from response: BackendMessageIterator) {
+        private func readConfiguration(
+            from response: BackendMessageIterator
+        ) async {
             config.removeAll()
-            while let next = response.next() {
+            while let next = await response.next() {
                 switch next {
                 case .readyForQuery(let transactionStatus):
                     self.lastTransactionStatus = transactionStatus
@@ -77,7 +83,7 @@ public enum PostgreSQL {
 }
 
 extension PostgreSQL {
-    class BackendMessageIterator: IteratorProtocol {
+    class BackendMessageIterator: AsyncIteratorProtocol {
         let stream: StreamReader
         var isDone: Bool = false
 
@@ -85,10 +91,10 @@ extension PostgreSQL {
             self.stream = stream
         }
 
-        func next() -> BackendMessage? {
+        func next() async -> BackendMessage? {
             guard !isDone else { return nil }
             do {
-                let message = try BackendMessage(from: stream)
+                let message = try await BackendMessage.decode(from: stream)
                 switch message {
                 case .readyForQuery, .error: isDone = true
                 default: break
@@ -99,30 +105,36 @@ extension PostgreSQL {
             }
         }
 
-        func dump() {
-            while let next = next() {
+        func dump() async {
+            while let next = await next() {
                 print(next)
             }
         }
     }
 
-    public class DataRowIterator: IteratorProtocol, Sequence {
+    public class DataRowIterator: AsyncIteratorProtocol, AsyncSequence {
         let response: BackendMessageIterator
         let header: RowDescription
 
-        init(_ response: BackendMessageIterator) throws {
-            guard case .some(.rowDescription(let header)) = response.next()
-            else { fatalError("DataRowIterator: invalid RowDescription") }
+        private init(response: BackendMessageIterator, header: RowDescription) {
             self.response = response
             self.header = header
         }
 
-        public func next() -> DataRow? {
-            switch response.next() {
+        static func asyncInit(
+            _ response: BackendMessageIterator
+        ) async throws -> DataRowIterator {
+            guard case .some(.rowDescription(let header)) = await response.next()
+            else { fatalError("DataRowIterator: invalid RowDescription") }
+            return .init(response: response, header: header)
+        }
+
+        public func next() async -> DataRow? {
+            switch await response.next() {
             case .some(.dataRow(let row)):
                 return row
             case .some(.commandComplete(_)):
-                guard case .some(.readyForQuery) = response.next() else {
+                guard case .some(.readyForQuery) = await response.next() else {
                     fatalError("DataRowIterator: invalid end")
                 }
                 return nil
@@ -130,15 +142,22 @@ extension PostgreSQL {
                 fatalError("DataRowIterator: invalid DataRow")
             }
         }
+
+        public func makeAsyncIterator() -> DataRowIterator {
+            return self
+        }
     }
 }
 
 extension PostgreSQL.DataRowIterator: CustomStringConvertible {
     public var description: String {
         var result = header.columns.map{ $0.name }.joined(separator: " | ")
-        for row in self {
-            result.append("\n")
-            result.append(row.values.joined(separator: " | " ))
+        // FIXME: remove
+        runAsyncAndBlock {
+            for await row in self {
+                result.append("\n")
+                result.append(row.values.joined(separator: " | " ))
+            }
         }
         return result
     }

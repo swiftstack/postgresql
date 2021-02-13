@@ -8,10 +8,13 @@ extension BackendMessage {
             let type: FieldType
             let value: String
 
-            init(from stream: SubStreamReader) throws {
-                let rawFieldType = Int(try stream.read(UInt8.self))
-                self.type = Field.FieldType(rawValue: rawFieldType)
-                self.value = try stream.readCString()
+            static func decode(
+                from stream: SubStreamReader
+            ) async throws -> Self {
+                let rawFieldType = Int(try await stream.read(UInt8.self))
+                let type = Field.FieldType(rawValue: rawFieldType)
+                let value = try await stream.readCString()
+                return .init(type: type, value: value)
             }
 
             enum FieldType {
@@ -37,17 +40,17 @@ extension BackendMessage {
             }
         }
 
-        init(from stream: SubStreamReader) throws {
+        static func decode(from stream: SubStreamReader) async throws -> Self {
             var fields = [Field]()
             while !stream.isEmpty {
                 // end of error message
-                guard try stream.peek() != 0 else {
-                    try stream.consume(count: 1)
+                guard try await stream.peek() != 0 else {
+                    try await stream.consume(count: 1)
                     break
                 }
-                fields.append(try .init(from: stream))
+                fields.append(try await .decode(from: stream))
             }
-            self.fields = fields
+            return .init(fields: fields)
         }
     }
 }

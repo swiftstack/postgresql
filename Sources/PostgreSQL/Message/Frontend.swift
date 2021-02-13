@@ -20,13 +20,13 @@ enum FrontendMessage: StreamEncodable {
     case startup(Startup)
     case query(Query)
 
-    func encode(to stream: StreamWriter) throws {
+    func encode(to stream: StreamWriter) async throws {
         switch self {
         case .startup(let message):
-            try message.encode(to: stream)
+            try await message.encode(to: stream)
         case .query(let message):
-            try stream.write(UInt8(RawType.query.rawValue))
-            try stream.withSubStreamWriter(
+            try await stream.write(UInt8(RawType.query.rawValue))
+            try await stream.withSubStreamWriter(
                 sizedBy: Int32.self,
                 includingHeader: true,
                 task: message.encode)
@@ -54,17 +54,17 @@ enum FrontendMessage: StreamEncodable {
             self.replication = replication
         }
 
-        func encode(to stream: StreamWriter) throws {
-            try stream.withSubStreamWriter(
+        func encode(to stream: StreamWriter) async throws {
+            try await stream.withSubStreamWriter(
                 sizedBy: Int32.self,
                 includingHeader: true)
             { stream in
-                try stream.write(PostgreSQL.protocolVersion)
-                try stream.write(cString: "user")
-                try stream.write(cString: user)
-                try stream.write(cString: database ?? "")
+                try await stream.write(PostgreSQL.protocolVersion)
+                try await stream.write(cString: "user")
+                try await stream.write(cString: user)
+                try await stream.write(cString: database ?? "")
             }
-            try stream.flush()
+            try await stream.flush()
         }
     }
 }
