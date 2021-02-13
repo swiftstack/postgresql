@@ -4,13 +4,13 @@ import PackageDescription
 let package = Package(
     name: "PostgreSQL",
     dependencies: [
-        .package(name: "AIO"),
+        .package(name: "Network"),
         .package(name: "Test")
     ],
     targets: [
         .target(
             name: "PostgreSQL",
-            dependencies: [.product(name: "Network", package: "AIO")],
+            dependencies: ["Network"],
             swiftSettings: [
                 .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
             ]),
