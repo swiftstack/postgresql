@@ -10,10 +10,16 @@ let package = Package(
     targets: [
         .target(
             name: "PostgreSQL",
-            dependencies: [.product(name: "Network", package: "AIO")]),
+            dependencies: [.product(name: "Network", package: "AIO")],
+            swiftSettings: [
+                .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
+            ]),
         .testTarget(
             name: "PostgreSQLTests",
-            dependencies: ["Test", "PostgreSQL"])
+            dependencies: ["Test", "PostgreSQL"],
+            swiftSettings: [
+                .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
+            ])
     ]
 )
 
