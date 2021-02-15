@@ -3,6 +3,11 @@ import PackageDescription
 
 let package = Package(
     name: "PostgreSQL",
+    products: [
+        .library(
+            name: "PostgreSQL",
+            targets: ["PostgreSQL"])
+    ],
     dependencies: [
         .package(name: "Network"),
         .package(name: "Test")
