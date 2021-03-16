@@ -5,15 +5,15 @@ public enum PostgreSQL {
     static let protocolVersion: Int32 = 196608
 
     public class Client {
-        let client: Network.Client
-        var stream: BufferedStream<NetworkStream>! = nil
+        let client: TCP.Client
+        var stream: BufferedStream<TCP.Stream>! = nil
 
         var config: [String : String] = [:]
         var keyData: BackendMessage.BackendKeyData? = nil
         var lastTransactionStatus: BackendMessage.TransactionStatus? = nil
 
         public init(host: String, port: Int) {
-            self.client = Network.Client(host: host, port: port)
+            self.client = TCP.Client(host: host, port: port)
         }
 
         public func connect(
