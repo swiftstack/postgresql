@@ -17,6 +17,7 @@ let package = Package(
             name: "PostgreSQL",
             dependencies: ["Network"],
             swiftSettings: [
+                .unsafeFlags(["-Xfrontend", "-disable-availability-checking"]),
                 .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
             ]),
         .executableTarget(
@@ -24,6 +25,7 @@ let package = Package(
             dependencies: ["Test", "PostgreSQL"],
             path: "Tests/PostgreSQL",
             swiftSettings: [
+                .unsafeFlags(["-Xfrontend", "-disable-availability-checking"]),
                 .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
             ])
     ]
