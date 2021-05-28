@@ -149,16 +149,15 @@ extension PostgreSQL {
     }
 }
 
-extension PostgreSQL.DataRowIterator: CustomStringConvertible {
+extension PostgreSQL.DataRowIterator {
     public var description: String {
-        var result = header.columns.map{ $0.name }.joined(separator: " | ")
-        // FIXME: remove
-        runAsyncAndBlock {
+        get async {
+            var result = header.columns.map{ $0.name }.joined(separator: " | ")
             for await row in self {
                 result.append("\n")
                 result.append(row.values.joined(separator: " | " ))
             }
+            return result
         }
-        return result
     }
 }
