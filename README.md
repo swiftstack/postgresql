@@ -1,9 +1,9 @@
 # PostgreSQL
 
-Asynchronous client in pure Swift with [cooperative multitasking](https://github.com/swift-stack/fiber). **No callbacks.**
+Asynchronous client in pure Swift with [cooperative multitasking](https://github.com/swiftstack/fiber). **No callbacks.**
 
 ```swift
-.package(url: "https://github.com/swift-stack/postgresql.git", .branch("dev"))
+.package(url: "https://github.com/swiftstack/postgresql.git", .branch("dev"))
 ```
 
 ## Usage
