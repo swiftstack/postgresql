@@ -1,6 +1,6 @@
 # PostgreSQL
 
-Asynchronous client in pure Swift with [cooperative multitasking](https://github.com/swiftstack/fiber). **No callbacks.**
+Asynchronous client in pure Swift
 
 ```swift
 .package(url: "https://github.com/swiftstack/postgresql.git", .branch("dev"))
@@ -9,17 +9,12 @@ Asynchronous client in pure Swift with [cooperative multitasking](https://github
 ## Usage
 
 ```swift
-import Async
 import PostgreSQL
 
-async {
-    let client = PostgreSQL.Client(host: "127.0.0.1", port: 5432)
-    try client.connect(user: "postgres")
-    let result = try client.query("select * from rows;")
-    print(result)
-}
-
-loop.run()
+let client = PostgreSQL.Client(host: "127.0.0.1", port: 5432)
+try await client.connect(user: "postgres")
+let result = try await client.query("select * from rows;")
+print(result)
 ```
 
 ```bash
