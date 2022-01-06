@@ -15,19 +15,11 @@ let package = Package(
     targets: [
         .target(
             name: "PostgreSQL",
-            dependencies: ["Network"],
-            swiftSettings: [
-                .unsafeFlags(["-Xfrontend", "-disable-availability-checking"]),
-                .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
-            ]),
+            dependencies: ["Network"]),
         .executableTarget(
             name: "Tests/PostgreSQL",
             dependencies: ["Test", "PostgreSQL"],
-            path: "Tests/PostgreSQL",
-            swiftSettings: [
-                .unsafeFlags(["-Xfrontend", "-disable-availability-checking"]),
-                .unsafeFlags(["-Xfrontend", "-enable-experimental-concurrency"])
-            ])
+            path: "Tests/PostgreSQL"),
     ]
 )
 
