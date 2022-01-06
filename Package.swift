@@ -6,11 +6,11 @@ let package = Package(
     products: [
         .library(
             name: "PostgreSQL",
-            targets: ["PostgreSQL"])
+            targets: ["PostgreSQL"]),
     ],
     dependencies: [
         .package(name: "Network"),
-        .package(name: "Test")
+        .package(name: "Test"),
     ],
     targets: [
         .target(
