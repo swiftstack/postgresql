@@ -47,8 +47,8 @@ enum FrontendMessage: StreamEncodable {
         init(
             user: String,
             database: String? = nil,
-            replication: Replication? = nil)
-        {
+            replication: Replication? = nil
+        ) {
             self.user = user
             self.database = database
             self.replication = replication
@@ -57,12 +57,12 @@ enum FrontendMessage: StreamEncodable {
         func encode(to stream: StreamWriter) async throws {
             try await stream.withSubStreamWriter(
                 sizedBy: Int32.self,
-                includingHeader: true)
-            { stream in
-                try await stream.write(PostgreSQL.protocolVersion)
-                try await stream.write(cString: "user")
-                try await stream.write(cString: user)
-                try await stream.write(cString: database ?? "")
+                includingHeader: true
+            ) { sub in
+                try await sub.write(PostgreSQL.protocolVersion)
+                try await sub.write(cString: "user")
+                try await sub.write(cString: user)
+                try await sub.write(cString: database ?? "")
             }
             try await stream.flush()
         }
@@ -72,8 +72,8 @@ enum FrontendMessage: StreamEncodable {
 extension FrontendMessage: RawRepresentable {
     var rawValue: UInt8 {
         switch self {
-            case .startup: fatalError("startup message doesn't have a type")
-            case .query: return RawType.query.rawValue
+        case .startup: fatalError("startup message doesn't have a type")
+        case .query: return RawType.query.rawValue
         }
     }
 

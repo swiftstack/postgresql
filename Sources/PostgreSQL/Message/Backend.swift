@@ -43,27 +43,27 @@ enum BackendMessage {
         }
         return try await stream.withSubStreamReader(
                 sizedBy: Int32.self,
-                includingHeader: true)
-        { stream in
+                includingHeader: true
+        ) { sub in
             switch messageType {
             case .authentication:
-                return .authentication(try await .decode(from: stream))
+                return .authentication(try await .decode(from: sub))
             case .parameterStatus:
-                return .parameterStatus(try await .decode(from: stream))
+                return .parameterStatus(try await .decode(from: sub))
             case .backendKeyData:
-                return .backendKeyData(try await .decode(from: stream))
+                return .backendKeyData(try await .decode(from: sub))
             case .readyForQuery:
-                return .readyForQuery(try await .decode(from: stream))
+                return .readyForQuery(try await .decode(from: sub))
             case .rowDescription:
-                return .rowDescription(try await .decode(from: stream))
+                return .rowDescription(try await .decode(from: sub))
             case .dataRow:
-                return .dataRow(try await .decode(from: stream))
+                return .dataRow(try await .decode(from: sub))
             case .commandComplete:
-                return .commandComplete(try await .decode(from: stream))
+                return .commandComplete(try await .decode(from: sub))
             case .errorResponse:
-                return .error(try await .decode(from: stream))
+                return .error(try await .decode(from: sub))
             default:
-                print("type: \(rawType) size: \(stream.limit)")
+                print("type: \(rawType) size: \(sub.limit)")
                 print(try await stream.readUntilEnd())
                 fatalError()
             }

@@ -8,9 +8,9 @@ public enum PostgreSQL {
         let client: TCP.Client
         var stream: BufferedStream<TCP.Stream>! = nil
 
-        var config: [String : String] = [:]
-        var keyData: BackendMessage.BackendKeyData? = nil
-        var lastTransactionStatus: BackendMessage.TransactionStatus? = nil
+        var config: [String: String] = [:]
+        var keyData: BackendMessage.BackendKeyData?
+        var lastTransactionStatus: BackendMessage.TransactionStatus?
 
         public init(host: String, port: Int) {
             self.client = TCP.Client(host: host, port: port)
@@ -33,7 +33,7 @@ public enum PostgreSQL {
 
         public func query(_ string: String) async throws -> DataRowIterator {
             let response = try await request(.query(.init(string)))
-            return try await DataRowIterator.asyncInit(response)
+            return try await DataRowIterator(response)
         }
 
         private func start(user: String, database: String?) async throws {
@@ -49,9 +49,9 @@ public enum PostgreSQL {
             }
         }
 
-        private func request(_ message: FrontendMessage) async throws
-            -> BackendMessageIterator
-        {
+        private func request(
+            _ message: FrontendMessage
+        ) async throws -> BackendMessageIterator {
             guard let stream = stream else {
                 fatalError("undefined is not an object")
             }
@@ -121,19 +121,21 @@ extension PostgreSQL {
             self.header = header
         }
 
-        static func asyncInit(
-            _ response: BackendMessageIterator
-        ) async throws -> DataRowIterator {
-            guard case .some(.rowDescription(let header)) = await response.next()
-            else { fatalError("DataRowIterator: invalid RowDescription") }
-            return .init(response: response, header: header)
+        convenience
+        init(_ response: BackendMessageIterator) async throws {
+            guard
+                case .some(.rowDescription(let header)) = await response.next()
+            else {
+                fatalError("DataRowIterator: invalid RowDescription")
+            }
+            self.init(response: response, header: header)
         }
 
         public func next() async -> DataRow? {
             switch await response.next() {
             case .some(.dataRow(let row)):
                 return row
-            case .some(.commandComplete(_)):
+            case .some(.commandComplete):
                 guard case .some(.readyForQuery) = await response.next() else {
                     fatalError("DataRowIterator: invalid end")
                 }
@@ -152,7 +154,7 @@ extension PostgreSQL {
 extension PostgreSQL.DataRowIterator {
     public var description: String {
         get async {
-            var result = header.columns.map{ $0.name }.joined(separator: " | ")
+            var result = header.columns.map { $0.name }.joined(separator: " | ")
             for await row in self {
                 result.append("\n")
                 result.append(row.values.joined(separator: " | " ))

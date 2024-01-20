@@ -4,7 +4,7 @@ struct RowDescription {
     let columns: [ColumnDescription]
 
     var columnNames: [String] {
-        return columns.map{ $0.name }
+        return columns.map { $0.name }
     }
 
     static func decode(from stream: SubStreamReader) async throws -> Self {
