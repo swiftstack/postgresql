@@ -19,10 +19,16 @@ let package = Package(
     targets: [
         .target(
             name: "PostgreSQL",
-            dependencies: ["Network"]),
+            dependencies: [
+                .product(name: "Network", package: "network"),
+            ]),
         .executableTarget(
             name: "Tests/PostgreSQL",
-            dependencies: ["Test", "PostgreSQL"],
+            dependencies: [
+                .target(name: "PostgreSQL"),
+                .product(name: "Test", package: "test"),
+
+            ],
             path: "Tests/PostgreSQL"),
     ]
 )
@@ -69,6 +75,6 @@ extension Package.Dependency {
     static func package(name: String, source: Source) -> Package.Dependency {
         return source == .local
             ? .package(name: name, path: source.url(for: name))
-            : .package(name: name, url: source.url(for: name), .branch("dev"))
+            : .package(url: source.url(for: name), branch: "dev")
     }
 }
