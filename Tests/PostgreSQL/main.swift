@@ -1,8 +1,8 @@
 import Test
 @testable import PostgreSQL
 
-test.case("") {
+test("") {
 
 }
 
-test.run()
+await run()
